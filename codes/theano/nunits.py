@@ -55,7 +55,7 @@ def NHardTanh(x,
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
     """
-    logger.info("c: %d" % c)
+    logger.info("c: %f" % c)
     threshold = 1.001
     noise = global_trng.normal(size=x.shape,
                                avg=0.,
@@ -83,7 +83,7 @@ def NHardSigmoid(x,
         c: float, standard deviation of the noise
     """
 
-    logger.info("c: %d" % c)
+    logger.info("c: %f" % c)
     noise = global_trng.normal(size=x.shape,
                                avg=0.,
                                std=1.0,
@@ -108,7 +108,7 @@ def NHardTanhSat(x,
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
     """
-    logger.info("c: %d" % c)
+    logger.info("c: %f" % c)
     threshold = 1.001
     noise = global_trng.normal(size=x.shape,
                                avg=0.,
@@ -166,7 +166,7 @@ def NTanh(x,
         alpha: the leaking rate from the linearized function to the nonlinear one.
     """
 
-    logger.info("c: %d" % c)
+    logger.info("c: %f" % c)
     threshold = 1.0
     noise = global_trng.normal(size=x.shape,
                                avg=0.,
@@ -213,7 +213,7 @@ def NSigmoid(x,
         alpha: the leaking rate from the linearized function to the nonlinear one.
     """
 
-    logger.info("c: %d" % c)
+    logger.info("c: %f" % c)
     signs = T.sgn(x)
     delta = abs(x) - threshold
 
@@ -264,7 +264,7 @@ def NTanhP(x,
     """
 
 
-    logger.info("c: %d" % c)
+    logger.info("c: %f" % c)
     noise = global_trng.normal(size=x.shape,
                                avg=0.,
                                std=1.0,
