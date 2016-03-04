@@ -3,7 +3,9 @@ Maintainer: Caglar Gulcehre
 E-mail: ca9lar (at) gmail <dot> com
 ------------------------------------
 
-You can find the specific  related to the Noisy
+You can find the different noisy activations functions  proposed in the  Noisy
+Activation Functions paper.
+
 """
 
 
@@ -93,6 +95,32 @@ def NHardSigmoid(x,
         noise = 0.
 
     res = HardSigmoid(x + c * noise)
+    return res
+
+def NReLU(x,
+          use_noise=1,
+          c=0.05):
+    """
+    Noisy Rectifier Sigmoid Units: NANI as proposed in the paper
+    ----------------------------------------------------
+    Arguments:
+
+        x: theano tensor variable, input of the function.
+        use_noise: int, whether to add noise or not to the activations, this is in particular
+        useful for the test time, in order to disable the noise injection.
+        c: float, standard deviation of the noise
+    """
+
+    logger.info("c: %f" % c)
+    noise = global_trng.normal(size=x.shape,
+                               avg=0.,
+                               std=1.0,
+                               dtype=floatX)
+
+    if not use_noise:
+        noise = 0.
+
+    res = Rect(x + c * noise)
     return res
 
 
@@ -364,7 +392,7 @@ def NSigmoidPInp(x,
     noise_det = 0.
     if half_normal:
        if alpha > 1.0:
-          scale *= -1
+          c *= -1
        noise_det = 0.797
        noise = abs(noise)
     elif not use_noise:
@@ -373,4 +401,47 @@ def NSigmoidPInp(x,
     noise = use_noise * noise + (1. - use_noise) * noise_det
     scale = c * T.nnet.softplus(p * abs(delta) / (abs(noise) + 1e-10))
     res = HardSigmoid(x + scale * noise)
+    return res
+
+def NTanhPInp(x,
+              p,
+              use_noise=1,
+              alpha=1.02,
+              c=0.25,
+              half_normal=False):
+    """
+    Noisy Tanh units where the noise is injected to the input: NANI with learning p.
+    This function works well with discrete switching functions.
+    ----------------------------------------------------
+    Arguments:
+        x: theano tensor variable, input of the function.
+        p: theano shared variable, a vector of parameters for p.
+        use_noise: int, whether to add noise or not to the activations, this is in particular
+        useful for the test time, in order to disable the noise injection.
+        c: float, standard deviation of the noise
+        alpha: float, the leakage rate from the linearized function to the nonlinear one.
+        half_normal: bool, whether the noise should be sampled from half-normal or
+        normal distribution.
+    """
+
+    logger.info("c: %f" % c)
+    signs = T.sgn(x)
+    delta = HardTanh(x) - x
+    signs = T.sgn(x)
+    noise = global_trng.normal(size=x.shape,
+                               avg=0,
+                               std=1.0,
+                               dtype=floatX)
+    noise_det = 0.
+    if half_normal:
+       if alpha > 1.0:
+          c *= -1
+       noise_det = 0.797
+       noise = abs(noise)
+    elif not use_noise:
+        noise = 0.
+
+    noise = use_noise * noise + (1. - use_noise) * noise_det
+    scale = c * T.nnet.softplus(p * abs(delta) / (abs(noise) + 1e-10))
+    res = HardTanh(x + scale * noise)
     return res
