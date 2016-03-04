@@ -363,7 +363,6 @@ def NSigmoidP(x,
 def NSigmoidPInp(x,
                p,
                use_noise=1,
-               alpha=1.02,
                c=0.25,
                half_normal=False):
     """
@@ -376,7 +375,6 @@ def NSigmoidPInp(x,
         use_noise: int, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
-        alpha: float, the leakage rate from the linearized function to the nonlinear one.
         half_normal: bool, whether the noise should be sampled from half-normal or
         normal distribution.
     """
@@ -406,7 +404,6 @@ def NSigmoidPInp(x,
 def NTanhPInp(x,
               p,
               use_noise=1,
-              alpha=1.02,
               c=0.25,
               half_normal=False):
     """
@@ -419,7 +416,6 @@ def NTanhPInp(x,
         use_noise: int, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
-        alpha: float, the leakage rate from the linearized function to the nonlinear one.
         half_normal: bool, whether the noise should be sampled from half-normal or
         normal distribution.
     """
