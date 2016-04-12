@@ -276,6 +276,7 @@ def NTanhP(x,
            use_noise=1,
            alpha=1.15,
            c=0.5,
+           noise=None,
            half_normal=False):
     """
     Noisy Hard Tanh Units: NAN with learning p
@@ -293,25 +294,26 @@ def NTanhP(x,
 
 
     logger.info("c: %f" % c)
-    noise = global_trng.normal(size=x.shape,
-                               avg=0.,
-                               std=1.0,
-                               dtype=floatX)
+    if not noise:
+        noise = global_trng.normal(size=x.shape,
+                                   avg=0.,
+                                   std=1.0,
+                                   dtype=floatX)
 
     signs = T.sgn(x)
     delta = HardTanh(x) - x
 
     scale = c * (T.nnet.sigmoid(p * delta) - 0.5)**2
-
+    noise_det = 0.
     if half_normal:
         if alpha > 1.0:
-            scale *= -1
+            scale *= -1.
         noise = abs(noise)
         if not use_noise:
-            noise = 0.797
+            noise_det = numpy.float32(0.797)
     elif not use_noise:
-        noise = 0.
-
+        noise_det = 0.
+    noise = use_noise * noise + (1. - use_noise) * noise_det
     res = alpha * HardTanh(x) + (1. - alpha) * x - signs * scale * noise
     return HardTanh(res)
 
@@ -321,6 +323,7 @@ def NSigmoidP(x,
               use_noise=1,
               alpha=1.1,
               c=0.15,
+              noise=None,
               half_normal=True):
     """
     Noisy Sigmoid Tanh Units: NAN with learning p
@@ -335,28 +338,30 @@ def NSigmoidP(x,
         half_normal: bool, whether the noise should be sampled from half-normal or
         normal distribution.
     """
-
-
+    lin_sigm = 0.25 * x + 0.5
     logger.info("c: %f" % c)
     signs = T.sgn(x)
-    delta = HardSigmoid(x) - (0.25 * x + 0.5)
+    delta = HardSigmoid(x) - lin_sigm
     signs = T.sgn(x)
     scale = c * (T.nnet.sigmoid(p * delta) - 0.5)**2
-    noise = global_trng.normal(size=x.shape,
-                               avg=0,
-                               std=1.0,
-                               dtype=floatX)
+    if not noise:
+        noise = global_trng.normal(size=x.shape,
+                                   avg=0,
+                                   std=1.0,
+                                   dtype=floatX)
     noise_det = 0.
     if half_normal:
        if alpha > 1.0:
-          scale *= -1
-       noise_det = 0.
-       noise = abs(noise)
+          scale *= -1.
+       if not use_noise:
+           noise_det = numpy.float32(0.797)
+       else:
+           noise = abs(noise)
     elif not use_noise:
-        noise = 0.
+        noise_det = 0.
 
-    noise = use_noise * noise + (1. -  use_noise) * noise_det
-    res = (alpha * HardSigmoid(x) + (1. - alpha) * (0.25 * x + 0.5) - signs * scale * noise)
+    noise = use_noise * noise + (1. - use_noise) * noise_det
+    res = (alpha * HardSigmoid(x) + (1. - alpha) * lin_sigm - signs * scale * noise)
     return res
 
 
@@ -441,3 +446,4 @@ def NTanhPInp(x,
     scale = c * T.nnet.softplus(p * abs(delta) / (abs(noise) + 1e-10))
     res = HardTanh(x + scale * noise)
     return res
+
