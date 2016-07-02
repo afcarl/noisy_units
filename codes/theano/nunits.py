@@ -277,6 +277,7 @@ def NTanhP(x,
            alpha=1.15,
            c=0.5,
            noise=None,
+           clip_output=False,
            half_normal=False):
     """
     Noisy Hard Tanh Units: NAN with learning p
@@ -315,7 +316,10 @@ def NTanhP(x,
         noise_det = 0.
     noise = use_noise * noise + (1. - use_noise) * noise_det
     res = alpha * HardTanh(x) + (1. - alpha) * x - signs * scale * noise
-    return HardTanh(res)
+
+    if clip_output:
+        return HardTanh(res)
+    return res
 
 
 def NSigmoidP(x,
