@@ -20,22 +20,16 @@ def NHardTanh(x,
     ----------------------------------------------------
     Arguments:
         x: theano tensor variable, input of the function.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
     """
     threshold = 1.001
-    # noise = global_trng.normal(size=x.shape,
-    #                            avg=0.,
-    #                            std=1.0,
-    #                            dtype=tf.float32)
 
     def noise_func() :return tf.random_normal(tf.shape(x), mean=0.0, stddev=1.0, dtype=tf.float32)
     def zero_func (): return tf.zeros(tf.shape(x), dtype=tf.float32, name=None)
 
     noise=tf.cond(use_noise,noise_func,zero_func)
-    # if not use_noise:
-    #     noise = 0.
 
     res = HardTanh(x + c * noise)
     return res
@@ -48,7 +42,7 @@ def NHardSigmoid(x,
     ----------------------------------------------------
     Arguments:
         x: theano tensor variable, input of the function.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
     """
@@ -57,13 +51,6 @@ def NHardSigmoid(x,
     def zero_func (): return tf.zeros(tf.shape(x), dtype=tf.float32, name=None)
 
     noise=tf.cond(use_noise,noise_func,zero_func)
-    # noise = global_trng.normal(size=x.shape,
-    #                            avg=0.,
-    #                            std=1.0,
-    #                            dtype=floatX)
-    #
-    # if not use_noise:
-    #     noise = 0.
 
     res = HardSigmoid(x + c * noise)
     return res
@@ -76,7 +63,7 @@ def NHardTanhSat(x,
     ----------------------------------------------------
     Arguments:
         x: theano tensor variable, input of the function.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
     """
@@ -97,8 +84,8 @@ def NHardSigmoidSat(x,
     Noisy Hard Sigmoid Units at Saturation: NANIS as proposed in the paper
     ----------------------------------------------------
     Arguments:
-        x: theano tensor variable, input of the function.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        x: tensorflow tensor variable, input of the function.
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
     """
@@ -121,8 +108,8 @@ def NTanh(x,
     Noisy Hard Tanh Units: NAN without learning p
     ----------------------------------------------------
     Arguments:
-        x: theano tensor variable, input of the function.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        x: tensorflow tensor variable, input of the function.
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
         alpha: the leaking rate from the linearized function to the nonlinear one.
@@ -130,11 +117,6 @@ def NTanh(x,
 
 
     threshold = 1.0
-    # noise = global_trng.normal(size=x.shape,
-    #                            avg=0.,
-    #                            std=1.0,
-    #                            dtype=floatX)
-
     signs = tf.sign(x)
     delta = tf.abs(x) - threshold
 
@@ -146,20 +128,8 @@ def NTanh(x,
     def zero_func (): return zeros+ 0.797  if half_normal   else zeros
     noise=tf.cond(use_noise,noise_func,zero_func)
 
-    # if half_normal:
-    #     if alpha > 1.0:
-    #         scale *= -1
-    #     noise = tf.abs(noise)
-    #     if not use_noise:
-    #         noise = 0.797
-    # elif not use_noise:
-    #     noise = 0.
-
     eps = scale * noise + alpha * delta
     z = x - signs * eps
-    # test = T.cast(abs(x) >= threshold, tf.float32)
-    # test = tf.greater_equal(tf.abs(x) , threshold)
-    # res = tf.select(test,z,x)
     test=tf.cast(tf.greater_equal(tf.abs(x) , threshold),tf.float32)
     res = test * z + (1. - test) *  HardTanh(x)
 
@@ -176,8 +146,8 @@ def NSigmoid(x,
     Noisy Hard Sigmoid Units: NAN without learning p
     ----------------------------------------------------
     Arguments:
-        x: theano tensor variable, input of the function.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        x: tensorflow tensor variable, input of the function.
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
         alpha: the leaking rate from the linearized function to the nonlinear one.
@@ -196,26 +166,11 @@ def NSigmoid(x,
     noise=tf.cond(use_noise,noise_func,zero_func)
 
 
-    # noise = global_trng.normal(size=x.shape,
-    #                                avg=0,
-    #                                std=1.0,
-    #                                dtype=floatX)
-
-    # if half_normal:
-    #    if alpha > 1.0:
-    #        scale *= -1
-    #    noise = abs(noise)
-    #    if not use_noise:
-    #         noise = 0.797
-    # elif not use_noise:
-    #     noise = 0.
-
     eps = scale * noise + alpha * delta
     signs = tf.sign(x)
     z = x - signs * eps
 
     test = tf.cast(tf.greater_equal(tf.abs(x) , threshold),tf.float32)
-    # test = T.cast(T.ge(abs(x), threshold), floatX)
     res = test * z + (1. - test) * HardSigmoid(x)
 
     return res
@@ -233,9 +188,9 @@ def NTanhP(x,
     Noisy Hard Tanh Units: NAN with learning p
     ----------------------------------------------------
     Arguments:
-        x: theano tensor variable, input of the function.
-        p: theano shared variable, a vector of parameters for p.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        x: tensorflow tensor variable, input of the function.
+        p: tensorflow variable, a vector of parameters for p.
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
         alpha: float, the leakage rate from the linearized function to the nonlinear one.
@@ -279,9 +234,9 @@ def NSigmoidP(x,
     Noisy Sigmoid Tanh Units: NAN with learning p
     ----------------------------------------------------
     Arguments:
-        x: theano tensor variable, input of the function.
-        p: theano shared variable, a vector of parameters for p.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        x: tensorflow tensor variable, input of the function.
+        p: tensorflow shared variable, a vector of parameters for p.
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
         alpha: float, the leakage rate from the linearized function to the nonlinear one.
@@ -307,14 +262,6 @@ def NSigmoidP(x,
     noise=tf.cond(use_noise,noise_func,zero_func)
     res = (alpha * HardSigmoid(x) + (1. - alpha) * lin_sigm - signs * scale * noise)
 
-    # res = alpha * HardTanh(x) + (1. - alpha) * x - signs * scale * noise
-    #
-    # if clip_output:
-    #     return HardTanh(res)
-    # return res
-    #
-    # noise = use_noise * noise + (1. - use_noise) * noise_det
-    # res = (alpha * HardSigmoid(x) + (1. - alpha) * lin_sigm - signs * scale * noise)
     return res
 
 def NSigmoidPInp(x,
@@ -328,9 +275,9 @@ def NSigmoidPInp(x,
     This function works well with discrete switching functions.
     ----------------------------------------------------
     Arguments:
-        x: theano tensor variable, input of the function.
-        p: theano shared variable, a vector of parameters for p.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        x: tensorflow tensor variable, input of the function.
+        p: tensorflow shared variable, a vector of parameters for p.
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
         half_normal: bool, whether the noise should be sampled from half-normal or
@@ -367,9 +314,9 @@ def NTanhPInp(x,
     This function works well with discrete switching functions.
     ----------------------------------------------------
     Arguments:
-        x: theano tensor variable, input of the function.
-        p: theano shared variable, a vector of parameters for p.
-        use_noise: int, whether to add noise or not to the activations, this is in particular
+        x: tensorflow tensor variable, input of the function.
+        p: tensorflow shared variable, a vector of parameters for p.
+        use_noise: bool, whether to add noise or not to the activations, this is in particular
         useful for the test time, in order to disable the noise injection.
         c: float, standard deviation of the noise
         half_normal: bool, whether the noise should be sampled from half-normal or
