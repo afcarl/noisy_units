@@ -182,7 +182,7 @@ def NHardSigmoidSat(x,
 def NTanh(x,
           use_noise=1,
           alpha=1.05,
-          c=0.5):
+          c=0.5,half_normal=False):
     """
     Noisy Hard Tanh Units: NAN without learning p
     ----------------------------------------------------
@@ -229,7 +229,7 @@ def NSigmoid(x,
               use_noise=1,
               alpha=1.15,
               c=0.25,
-              threshold=2.0):
+              threshold=2.0,half_normal=False):
     """
     Noisy Hard Sigmoid Units: NAN without learning p
     ----------------------------------------------------
@@ -373,7 +373,7 @@ def NSigmoidPInp(x,
                p,
                use_noise=1,
                c=0.25,
-               half_normal=False):
+               half_normal=False,alpha=1.1):
     """
     Noisy Sigmoid where the noise is injected to the input: NANI with learning p.
     This function works well with discrete switching functions.
@@ -414,7 +414,7 @@ def NTanhPInp(x,
               p,
               use_noise=1,
               c=0.25,
-              half_normal=False):
+              half_normal=False,alpha=1.1):
     """
     Noisy Tanh units where the noise is injected to the input: NANI with learning p.
     This function works well with discrete switching functions.
